@@ -1,0 +1,7 @@
+我需制作一个基于cloudflare pages的文件上传系统。使用JS语言，系统结构简单，易于部署。
+
+包括两个主要页面：登录页和文件清单页
+上传文件格式为PDF文档，文件大小不超过800k. 文件存储于R2. 文件映射数据及用户信息存储于D1. 
+
+项目仓库地址：
+https://github.com/Archdalehome/cloudnexus_on_cf.git
