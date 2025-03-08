@@ -75,12 +75,14 @@ async function generateToken(user) {
     exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24小时过期
   }
   
-  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url')
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url')
   
   const secret = 'your-secret-key' // 在实际应用中应该使用环境变量
-  const signature = await bcrypt.hash(base64Header + '.' + base64Payload, 10)
-  const base64Signature = Buffer.from(signature).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  const data = base64Header + '.' + base64Payload
+  const salt = await bcrypt.genSalt(10)
+  const signature = await bcrypt.hash(data, salt)
+  const base64Signature = Buffer.from(signature).toString('base64url')
   
   return `${base64Header}.${base64Payload}.${base64Signature}`
 }
