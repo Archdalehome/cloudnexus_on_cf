@@ -54,10 +54,21 @@ export async function onRequestPost(context) {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
+    console.error('Login error:', error);
+    let errorMessage = '服务器内部错误';
+    let statusCode = 500;
+
+    if (error.message.includes('database')) {
+      errorMessage = '数据库操作失败';
+    } else if (error.message.includes('token')) {
+      errorMessage = 'Token生成失败';
+    }
+
     return new Response(JSON.stringify({
-      error: '服务器内部错误'
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }), {
-      status: 500,
+      status: statusCode,
       headers: { 'Content-Type': 'application/json' }
     })
   }

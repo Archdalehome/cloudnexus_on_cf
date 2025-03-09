@@ -70,10 +70,13 @@ const handleLogin = async () => {
     const data = await response.json()
     if (response.ok) {
       localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
       ElMessage.success('登录成功')
       router.push('/files')
     } else {
-      throw new Error(data.error || '登录失败')
+      const errorMessage = data.error || '登录失败'
+      const details = data.details ? `\n详细信息: ${data.details}` : ''
+      throw new Error(`${errorMessage}${details}`)
     }
   } catch (error) {
     ElMessage.error(error.message || '登录失败，请重试')
