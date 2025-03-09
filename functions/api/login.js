@@ -80,9 +80,23 @@ async function generateToken(user) {
   
   const secret = 'your-secret-key' // 在实际应用中应该使用环境变量
   const data = base64Header + '.' + base64Payload
-  const salt = await bcrypt.genSalt(10)
-  const signature = await bcrypt.hash(data, salt)
-  const base64Signature = Buffer.from(signature).toString('base64url')
   
+  // 使用Web Crypto API生成HMAC签名
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(data)
+  )
+  
+  const base64Signature = Buffer.from(signature).toString('base64url')
   return `${base64Header}.${base64Payload}.${base64Signature}`
 }
