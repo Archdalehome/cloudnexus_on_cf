@@ -22,7 +22,7 @@ bucket_name = "2025-03-05-docupload"
 
 # 环境变量配置
 [vars]
-JWT_SECRET = "your-secure-jwt-secret-key"
+JWT_SECRET = "2289d3c6ed29636922359cca89a6b0ffecc8062629242415d8c4ed066e6e3bb3"
 
 [env.production.vars]
-JWT_SECRET = "your-production-jwt-secret-key"
+JWT_SECRET = "2289d3c6ed29636922359cca89a6b0ffecc8062629242415d8c4ed066e6e3bb3"
