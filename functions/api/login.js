@@ -42,7 +42,7 @@ export async function onRequestPost(context) {
     }
 
     // 生成JWT token
-    const token = await generateToken(user)
+    const token = await generateToken(user, context)
 
     return new Response(JSON.stringify({
       token,
@@ -63,7 +63,7 @@ export async function onRequestPost(context) {
   }
 }
 
-async function generateToken(user) {
+async function generateToken(user, context) {
   const header = {
     alg: 'HS256',
     typ: 'JWT'
@@ -78,7 +78,7 @@ async function generateToken(user) {
   const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url')
   const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url')
   
-  const secret = 'your-secret-key' // 在实际应用中应该使用环境变量
+  const secret = context.env.JWT_SECRET || 'your-secret-key'
   const data = base64Header + '.' + base64Payload
   
   // 使用Web Crypto API生成HMAC签名
