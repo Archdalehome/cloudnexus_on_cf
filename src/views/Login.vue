@@ -58,24 +58,27 @@ const handleLogin = async () => {
     await loginForm.value.validate()
     loading.value = true
     
-    // TODO: 实现实际的登录API调用
     const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(loginData)
     })
 
     const data = await response.json()
-    if (response.ok) {
+    if (response.ok && data.token) {
+      // 保存认证信息
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       ElMessage.success('登录成功')
       router.push('/files')
     } else {
+      // 处理错误响应
       const errorMessage = data.error || '登录失败'
       const details = data.details ? `\n详细信息: ${data.details}` : ''
+      console.error('Login failed:', errorMessage, details)
       throw new Error(`${errorMessage}${details}`)
     }
   } catch (error) {

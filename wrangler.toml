@@ -14,3 +14,10 @@ bucket = "./dist"
 # 开发环境配置
 [dev]
 port = 8788
+
+# 环境变量配置
+[vars]
+JWT_SECRET = "your-secure-jwt-secret-key"
+
+[env.production.vars]
+JWT_SECRET = "your-production-jwt-secret-key"

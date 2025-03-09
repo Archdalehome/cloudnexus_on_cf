@@ -75,39 +75,50 @@ export async function onRequestPost(context) {
 }
 
 async function generateToken(user, context) {
-  const header = {
-    alg: 'HS256',
-    typ: 'JWT'
+  try {
+    if (!context.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+
+    const header = {
+      alg: 'HS256',
+      typ: 'JWT'
+    };
+
+    const payload = {
+      sub: user.id.toString(),
+      username: user.username,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24小时过期
+    };
+
+    const base64Header = btoa(JSON.stringify(header)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    const base64Payload = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(context.env.JWT_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const data = base64Header + '.' + base64Payload;
+    const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(data)
+    );
+
+    const base64Signature = btoa(String.fromCharCode.apply(null, new Uint8Array(signature)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    return `${base64Header}.${base64Payload}.${base64Signature}`;
+  } catch (error) {
+    console.error('Token generation error:', error);
+    throw new Error('Token生成失败: ' + error.message);
   }
-  
-  const payload = {
-    id: user.id,
-    username: user.username,
-    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24小时过期
-  }
-  
-  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url')
-  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url')
-  
-  const secret = context.env.JWT_SECRET || 'your-secret-key'
-  const data = base64Header + '.' + base64Payload
-  
-  // 使用Web Crypto API生成HMAC签名
-  const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(data)
-  )
-  
-  const base64Signature = Buffer.from(signature).toString('base64url')
-  return `${base64Header}.${base64Payload}.${base64Signature}`
 }
