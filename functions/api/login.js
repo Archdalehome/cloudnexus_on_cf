@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 export async function onRequestPost(context) {
   try {
     const { username, password } = await context.request.json()
+    console.log('Login attempt for username:', username)
 
     // 参数验证
     if (!username || !password) {
@@ -18,6 +19,7 @@ export async function onRequestPost(context) {
     // 从D1数据库中查询用户
     const stmt = context.env.DB.prepare('SELECT * FROM users WHERE username = ?')
     const { results } = await stmt.bind(username).all()
+    console.log('Database query results:', results)
     
     if (!results || results.length === 0) {
       console.error('User not found:', username)
@@ -73,33 +75,46 @@ export async function onRequestPost(context) {
 }
 
 async function generateToken(user, context) {
-  const payload = {
-    sub: user.id,
-    username: user.username,
-    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24小时过期
+  try {
+    console.log('Generating token for user:', user.username)
+    
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24)
+    }
+    
+    // 验证 JWT_SECRET 是否正确传入
+    if (!context.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET not configured')
+    }
+    
+    const encoder = new TextEncoder()
+    const secretKeyData = encoder.encode(context.env.JWT_SECRET)
+    const key = await crypto.subtle.importKey(
+      'raw',
+      secretKeyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    
+    const header = { alg: 'HS256', typ: 'JWT' }
+    const encodedHeader = btoa(JSON.stringify(header))
+    const encodedPayload = btoa(JSON.stringify(payload))
+    
+    const signatureInput = `${encodedHeader}.${encodedPayload}`
+    const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(signatureInput)
+    )
+    
+    const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    console.log('Token generated successfully')
+    return `${encodedHeader}.${encodedPayload}.${encodedSignature}`
+  } catch (error) {
+    console.error('Token generation error:', error)
+    throw error
   }
-  
-  const encoder = new TextEncoder()
-  const secretKeyData = encoder.encode(context.env.JWT_SECRET)
-  const key = await crypto.subtle.importKey(
-    'raw',
-    secretKeyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  
-  const header = { alg: 'HS256', typ: 'JWT' }
-  const encodedHeader = btoa(JSON.stringify(header))
-  const encodedPayload = btoa(JSON.stringify(payload))
-  
-  const signatureInput = `${encodedHeader}.${encodedPayload}`
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(signatureInput)
-  )
-  
-  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-  return `${encodedHeader}.${encodedPayload}.${encodedSignature}`
 }
