@@ -68,18 +68,22 @@ const handleLogin = async () => {
     })
 
     const data = await response.json()
-    if (response.ok && data.token) {
+    if (!response.ok) {
+      // 处理错误响应
+      const errorMessage = data.error || '登录失败'
+      const details = data.details ? `\n详细信息: ${data.details}` : ''
+      console.error('Login failed:', errorMessage, details)
+      throw new Error(errorMessage)
+    }
+    
+    if (data.token) {
       // 保存认证信息
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       ElMessage.success('登录成功')
       router.push('/files')
     } else {
-      // 处理错误响应
-      const errorMessage = data.error || '登录失败'
-      const details = data.details ? `\n详细信息: ${data.details}` : ''
-      console.error('Login failed:', errorMessage, details)
-      throw new Error(`${errorMessage}${details}`)
+      throw new Error('登录失败：无效的响应数据')
     }
   } catch (error) {
     ElMessage.error(error.message || '登录失败，请重试')
