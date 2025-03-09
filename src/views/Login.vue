@@ -71,8 +71,7 @@ const handleLogin = async () => {
     if (!response.ok) {
       // 处理错误响应
       const errorMessage = data.error || '登录失败'
-      const details = data.details ? `\n详细信息: ${data.details}` : ''
-      console.error('Login failed:', errorMessage, details)
+      ElMessage.error(errorMessage)
       throw new Error(errorMessage)
     }
     
@@ -86,6 +85,7 @@ const handleLogin = async () => {
       throw new Error('登录失败：无效的响应数据')
     }
   } catch (error) {
+    console.error('Login error:', error)
     ElMessage.error(error.message || '登录失败，请重试')
   } finally {
     loading.value = false
