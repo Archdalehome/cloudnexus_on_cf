@@ -5,7 +5,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "2025-03-05-docupload-d1"
-database_id = "8f1dedcc-bb7c-449c-89e3-d0dc28afbba9"
+database_id = "87231326-cce5-49c5-8937-b41a3005c009"
 
 # 静态资源配置
 [site]
